@@ -1,16 +1,12 @@
-# This is a sample Python script.
+# This import is just a work around for a bug in urlLib trying to install chromium for requests_html
+import pyppdf.patch_pyppeteer
+from requests_html import HTMLSession
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from ScrappersLogic.FotocasaScrapper import FotocasaScrapper
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharmm')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    fs = FotocasaScrapper("https://www.fotocasa.es/en/buy/homes","barcelona")
+
+    l = fs.getHousesListUrls()
+    fs.getHouseInfo(l[3])
