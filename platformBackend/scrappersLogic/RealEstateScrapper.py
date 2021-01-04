@@ -1,4 +1,3 @@
-from requests_html import HTMLSession
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
@@ -44,5 +43,5 @@ class RealEstateScrapper():
 
     def getBeautifulSoup(self, htmlContent):
 
-        return BeautifulSoup(htmlContent, features="lxml")
+        return BeautifulSoup(htmlContent, "lxml")
 

@@ -1,8 +1,8 @@
 # Imports to execute the code inside the Django environment
-# import os
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'platformBackend.platformBackend.settings'
-# import django
-# django.setup()
+import os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "platformBackend.settings")
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
 
 from dblogic.models import House
 from scrappersLogic.FotocasaScrapper import FotocasaScrapper
@@ -10,6 +10,8 @@ from dataProcessement.FotocasaDataProcessor import FotocasaDataProcessor
 import queue
 from threading import Thread
 import sys
+import csv
+from datetime import date
 
 def dictToDB(processedDict, nPage):
     """
@@ -26,23 +28,7 @@ def dictToDB(processedDict, nPage):
     except Exception as e:
         print(f"Problem occurred storing {processedDict} from page {nPage} into the db: {e}")
 
-def stopFetchingTrigger(houseUrlsPrev, houseUrlsNext):
-    """
-    Fotocasa webapage is dynamic, and it has infinite pages with the same houses, in order to detect
-    when we need to stop fetching pages, we need to compare the links from the last page and the new one
-    and check if they are the same.
-    :param houseUrlsPrev:
-    :param houseUrlsNext:
-    :return: True or False, meaning if we need to stop fetching pages.
-    """
-
-    if houseUrlsPrev[0] != houseUrlsNext[0]:
-        return True
-    else:
-        print("xapant")
-        return False
-
-
+#TODO Change a couple things to make this function work for every webpage
 def dbFiller():
     """
     This function is in charge of calling the appropriate classes to scrape all the houses of FotoCasa webpage,
@@ -64,25 +50,32 @@ def dbFiller():
             urlTimeTuple = q.get_nowait()
             try:
                 dataDict = fs.getHouseInfo(urlTimeTuple[0])
+                if dataDict != None:
+                    fp = FotocasaDataProcessor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
+                    # Storing the fetched house into the DB
+                    dictToDB(fp._processAll(), nPage)
             except Exception as e:
                 print(f"Error fetching the house with url: {urlTimeTuple[0]} error: {e}")
-            fp = FotocasaDataProcessor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
-            # Storing the fetched house into the DB
-            dictToDB(fp._processAll(), nPage)
 
             q.task_done()
         sys.stdout.write(f"\r Page {nPage} complete")
 
     # Dictionary to keep track if we need to finish fetching, contains dummy values at first
     prevNextUrls = {"prev":["a"], "next":["b"]}
-    nPage = 2
+    nPage = 233
     num_fetch_threads = 30
     fs = FotocasaScrapper("https://www.fotocasa.es/en/buy/homes", "barcelona")
 
-    houseUrls, onlineTimes = fs.getHousesListUrlsAndTimes()
+    houseUrls, onlineTimes = fs.getHousesListUrlsAndTimes(232)
     totalUrls = len(houseUrls)
 
-    while stopFetchingTrigger(prevNextUrls["prev"], prevNextUrls["next"]):
+    while fs.stopFetchingTrigger(prevNextUrls["prev"], prevNextUrls["next"]):
+
+        # Wen we cannot retrieve the urls we assign the variable to None
+        if houseUrls == None:
+            print(f"Skipping page {nPage}")
+            continue
+
         dynamicprint = f"Scrapping Pages in page: {nPage - 1}"
         sys.stdout.write(f"\r{dynamicprint} 0/{totalUrls}")
         # Creating a queue structure with the urls of houses to scrape, so we can pass it to the threaded function
@@ -103,5 +96,35 @@ def dbFiller():
         prevNextUrls["next"] = houseUrls
         nPage += 1
 
+def DBmodeltoCSV(model):
+    """
+    This functions takes a model and exports it as a csv file
+    """
+
+    fileName = f"{model.__name__}:{date.today()}.csv"
+
+    with open(f"../csvFiles/{fileName}", "w") as csvFile:
+        writer = csv.writer(csvFile)
+        # Writing first row with column names
+        row = ""
+        for field in model._meta.fields:
+            # Removing semicolons, since they'll be used as separators
+            row += field.name
+            row += ";"
+
+        writer.writerow([row])
+
+        # write your header first
+        for obj in model.objects.all():
+            row = ""
+            # We iterate over every field of the objects
+            for field in model._meta.fields:
+                rowContent = str(getattr(obj, field.name)).replace(";","")
+                row += rowContent
+                row += ";"
+
+            writer.writerow([row])
+
+
 if __name__ == '__main__':
-    dbFiller()
+    DBmodeltoCSV(House)

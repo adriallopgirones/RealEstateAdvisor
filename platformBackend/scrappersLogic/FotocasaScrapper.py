@@ -53,7 +53,8 @@ class FotocasaScrapper(RealEstateScrapper):
                 if "new-home" not in link["href"]:
                     housesListUrls.append(link["href"])
         else:
-            raise Exception("There is no links in this page")
+            print(f"There is no links in this page {self.buildUrlForCityandPage(nPage)}")
+            return None, None
 
         # Fetching the times a house has been in the webpage
         if len(soup.select("span.re-Card-timeago")) > 0:
@@ -70,7 +71,7 @@ class FotocasaScrapper(RealEstateScrapper):
 
     def getHouseInfo(self, houseUrl):
         """
-        This functions scrapes all the information of the house specifed in the url
+        This functions scrapes all the information of the house specified in the url
         :param houseUrl:
         :return: A dictionary with the house's features
         """
@@ -106,6 +107,7 @@ class FotocasaScrapper(RealEstateScrapper):
             houseInfoDict["price"] = price.get_text()
         else:
             raise Exception("Not able to find the price")
+            return None
 
         zone = soup.find("span", class_="re-Breadcrumb-text")
         if zone is not None:
@@ -155,6 +157,28 @@ class FotocasaScrapper(RealEstateScrapper):
             houseInfoDict["description"] = description.get_text()
 
         return houseInfoDict
+
+
+    @staticmethod
+    def stopFetchingTrigger(self, houseUrlsPrev, houseUrlsNext):
+        """
+        Fotocasa webapage is dynamic, and it has infinite pages with the same houses, in order to detect
+        when we need to stop fetching pages, we need to compare the links from the last page and the new one
+        and check if they are the same.
+        :param houseUrlsPrev:
+        :param houseUrlsNext:
+        :return: True or False, meaning if we need to stop fetching pages.
+        """
+
+        if houseUrlsPrev != None:
+            if houseUrlsPrev[0] != houseUrlsNext[0]:
+                return True
+            else:
+                print("All the houses have been retrieved")
+                return False
+        else:
+            return True
+
 
 
 

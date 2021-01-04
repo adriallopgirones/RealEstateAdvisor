@@ -7,30 +7,30 @@ class FotocasaDataProcessor():
     coming from a dictionary pulled by the FotoCasaScrapper
     """
 
-    def __init__(self, houseInfoDict, url, timeOnline):
+    def __init__(self, houseInfoDict, url, timeonline):
 
         try:
-            if "now" in timeOnline:
-                _timeOnline = 1
+            if "now" in timeonline:
+                _timeonline = 1
             else:
-               _timeOnline = int(timeOnline.split(" ")[0])
+               _timeonline = int(timeonline.split(" ")[0])
         except ValueError as e:
             print(f"Data processement error in timeOnline: string to int: {e}")
 
         self.houseInfoDict = houseInfoDict
         self.houseInfoDictProcessed = {
             "url":url,
-            "timeOnline":_timeOnline,
-            "price":"",
+            "timeonline":_timeonline,
+            "price":-1,
             "zone":"",
             "nbedrooms":"",
             "nbathrooms":"",
             "size":"",
-            "floor":"",
+            "floor":-1,
             "typology":"",
             "status":"",
-            "antiquity":"",
-            "elevator":"",
+            "antiquity":-1,
+            "elevator":-1,
             "orientation":"",
             "parking":"",
             "furnished":"",
@@ -49,6 +49,7 @@ class FotocasaDataProcessor():
                 print(f"Data processement error: string to int: {e}")
         else:
             self.houseInfoDictProcessed["price"] = 0
+
     def processZone(self):
         self.houseInfoDictProcessed["zone"] = self.houseInfoDict["zone"]
 
