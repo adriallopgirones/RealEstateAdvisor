@@ -13,6 +13,8 @@ import sys
 import csv
 from datetime import date
 
+from dblogic.tasks import add
+
 def dictToDB(processedDict, nPage):
     """
     This functions receives the processed dictionary with the information of a house we construct in the Processor
@@ -28,10 +30,10 @@ def dictToDB(processedDict, nPage):
     except Exception as e:
         print(f"Problem occurred storing {processedDict} from page {nPage} into the db: {e}")
 
-#TODO Change a couple things to make this function work for every webpage
-def dbFiller():
+
+def dbFiller(scrapper, processor, city):
     """
-    This function is in charge of calling the appropriate classes to scrape all the houses of FotoCasa webpage,
+    This function is in charge of calling the appropriate classes to scrape all the houses,
     process them and then storing them into the DB
     :return:
     """
@@ -49,11 +51,11 @@ def dbFiller():
 
             urlTimeTuple = q.get_nowait()
             try:
-                dataDict = fs.getHouseInfo(urlTimeTuple[0])
+                dataDict = sc.getHouseInfo(urlTimeTuple[0])
                 if dataDict != None:
-                    fp = FotocasaDataProcessor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
+                    pr = processor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
                     # Storing the fetched house into the DB
-                    dictToDB(fp._processAll(), nPage)
+                    dictToDB(pr._processAll(), nPage)
             except Exception as e:
                 print(f"Error fetching the house with url: {urlTimeTuple[0]} error: {e}")
 
@@ -62,14 +64,15 @@ def dbFiller():
 
     # Dictionary to keep track if we need to finish fetching, contains dummy values at first
     prevNextUrls = {"prev":["a"], "next":["b"]}
-    nPage = 233
+    nPage = 2
     num_fetch_threads = 30
-    fs = FotocasaScrapper("https://www.fotocasa.es/en/buy/homes", "barcelona")
 
-    houseUrls, onlineTimes = fs.getHousesListUrlsAndTimes(232)
+    #Creating an instance of whatever scrapper this function receives
+    sc = scrapper(city)
+    houseUrls, onlineTimes = sc.getHousesListUrlsAndTimes()
     totalUrls = len(houseUrls)
 
-    while fs.stopFetchingTrigger(prevNextUrls["prev"], prevNextUrls["next"]):
+    while sc.stopFetchingTrigger(prevNextUrls["prev"], prevNextUrls["next"]):
 
         # Wen we cannot retrieve the urls we assign the variable to None
         if houseUrls == None:
@@ -92,9 +95,10 @@ def dbFiller():
         enclosure_queue.join()
 
         prevNextUrls["prev"] = houseUrls
-        houseUrls, onlineTimes = fs.getHousesListUrlsAndTimes(nPage)
+        houseUrls, onlineTimes = sc.getHousesListUrlsAndTimes(nPage)
         prevNextUrls["next"] = houseUrls
         nPage += 1
+
 
 def DBmodeltoCSV(model):
     """
@@ -127,4 +131,7 @@ def DBmodeltoCSV(model):
 
 
 if __name__ == '__main__':
-    DBmodeltoCSV(House)
+    # dbFiller(FotocasaScrapper, FotocasaDataProcessor, "barcelona")
+
+    res = add.delay(2,3)
+    print(res.id)

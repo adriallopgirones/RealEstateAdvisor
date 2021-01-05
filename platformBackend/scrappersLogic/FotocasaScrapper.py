@@ -7,8 +7,8 @@ class FotocasaScrapper(RealEstateScrapper):
     houses there
     """
 
-    def __init__(self, baseUrl, cityToScrape = "barcelona"):
-        self.baseUrl = baseUrl
+    def __init__(self, cityToScrape = "barcelona"):
+        self.baseUrl = "https://www.fotocasa.es/en/buy/homes"
         self.cityToScrape = cityToScrape
 
     def buildUrlForCityandPage(self, nPage=1):
@@ -160,7 +160,7 @@ class FotocasaScrapper(RealEstateScrapper):
 
 
     @staticmethod
-    def stopFetchingTrigger(self, houseUrlsPrev, houseUrlsNext):
+    def stopFetchingTrigger(houseUrlsPrev, houseUrlsNext):
         """
         Fotocasa webapage is dynamic, and it has infinite pages with the same houses, in order to detect
         when we need to stop fetching pages, we need to compare the links from the last page and the new one
