@@ -20,6 +20,7 @@ class FotocasaDataProcessor():
         self.houseInfoDict = houseInfoDict
         self.houseInfoDictProcessed = {
             "url":url,
+            "sold":0,
             "timeonline":_timeonline,
             "price":-1,
             "zone":"",
@@ -72,7 +73,10 @@ class FotocasaDataProcessor():
         elif "rd" in self.houseInfoDict["floor"]:
             self.houseInfoDictProcessed["floor"] = 3
         else:
-            self.houseInfoDictProcessed["floor"] = self.houseInfoDict["floor"].split("th")[0]
+            if "15" in self.houseInfoDict["floor"]:
+                self.houseInfoDictProcessed["floor"] = 15
+            else:
+                self.houseInfoDictProcessed["floor"] = self.houseInfoDict["floor"].split("th")[0]
 
     def processTypology(self):
         self.houseInfoDictProcessed["typology"] = self.houseInfoDict["typology"].replace("Typology","")

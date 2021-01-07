@@ -1,7 +1,8 @@
 from django.db import models
 
-class House(models.Model):
+class FotocasaHouse(models.Model):
     url = models.CharField(unique=True, max_length=2000)
+    sold = models.IntegerField(default=0)
     timeonline = models.IntegerField()
     price = models.IntegerField()
     zone = models.CharField(default="", max_length=1000)

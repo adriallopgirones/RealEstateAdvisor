@@ -1,4 +1,4 @@
 from django.contrib import admin
-from dblogic.models import House
+from dblogic.models import FotocasaHouse
 
-admin.site.register(House)
+admin.site.register(FotocasaHouse)
