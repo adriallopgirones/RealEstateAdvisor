@@ -1,10 +1,12 @@
 from statistics import mean
+from dataProcessement.processingConstants import fotoCasaConstants
+import random
 
 class FotocasaDataProcessor():
 
     """
-    This class contains all the tools to process the data to the proper format for the DB
-    coming from a dictionary pulled by the FotoCasaScrapper
+    This class process the data to the proper format for the DB and the modeling the data comes
+    from a dictionary constructed by the FotoCasaScrapper pulling data from the Internet
     """
 
     def __init__(self, houseInfoDict, url, timeonline):
@@ -22,103 +24,176 @@ class FotocasaDataProcessor():
             "url":url,
             "sold":0,
             "timeonline":_timeonline,
-            "price":-1,
-            "zone":"",
-            "nbedrooms":"",
-            "nbathrooms":"",
-            "size":"",
-            "floor":-1,
-            "typology":"",
-            "status":"",
-            "antiquity":-1,
-            "elevator":-1,
-            "orientation":"",
-            "parking":"",
-            "furnished":"",
-            "heating":"",
-            "hotwater":"",
-            "tags":"",
-            "description":""
+            "price":None,
+            "predictedprice":None,
+            "zone":None,
+            "nbedrooms":None,
+            "nbathrooms":None,
+            "size":None,
+            "floor":None,
+            "typology":None,
+            "status":None,
+            "antiquity":None,
+            "elevator":None,
+            "orientation":None,
+            "parking":None,
+            "furnished":None,
+            "heating":None,
+            "hotwater":None,
+            "tags":None,
+            "description":None,
+            "airconditioning":None,
+            "terrace":None,
+            "kitchen":None,
+            "parquet":None
         }
 
     def processPrice(self):
-        if "Ask" not in self.houseInfoDict["price"]:
-            euros = (self.houseInfoDict["price"].split(" ")[0]).replace(".","")
-            try:
-               self.houseInfoDictProcessed["price"] = int(euros)
-            except ValueError as e:
-                print(f"Data processement error: string to int: {e}")
-        else:
-            self.houseInfoDictProcessed["price"] = 0
+        self.houseInfoDictProcessed["price"] = int(self.houseInfoDict["price"])
 
     def processZone(self):
-        self.houseInfoDictProcessed["zone"] = self.houseInfoDict["zone"]
+        self.houseInfoDictProcessed["zone"] = fotoCasaConstants["zonesDict"][self.houseInfoDict["zone"]]
 
     def processnBedrooms(self):
-        self.houseInfoDictProcessed["nbedrooms"] = self.houseInfoDict["nbedrooms"].split(" ")[0]
+        if self.houseInfoDict["nbedrooms"] != None:
+            intNbedrooms = int(self.houseInfoDict["nbedrooms"].split(" ")[0])
+        else:
+            intNbedrooms = fotoCasaConstants['nBedroomsAverage']
+
+        self.houseInfoDictProcessed["nbedrooms"] = intNbedrooms
 
     def processnBathrooms(self):
-        self.houseInfoDictProcessed["nbathrooms"] = self.houseInfoDict["nbathrooms"].split(" ")[0]
+        if self.houseInfoDict["nbathrooms"] != None:
+            intNbathrooms = int(self.houseInfoDict["nbathrooms"].split(" ")[0])
+        else:
+            intNbathrooms = fotoCasaConstants['nBathroomsAverage']
+
+        self.houseInfoDictProcessed["nbathrooms"] = intNbathrooms
 
     def processSize(self):
-        self.houseInfoDictProcessed["size"] = self.houseInfoDict["size"].split(" ")[0]
+        if self.houseInfoDict["size"] != None:
+            intSize = int(self.houseInfoDict["size"].split(" ")[0])
+        else:
+            intSize = fotoCasaConstants['sizeAverage']
+
+        self.houseInfoDictProcessed["size"] = intSize
 
     def processFloor(self):
-        if "Ground" in self.houseInfoDict["floor"]:
-            self.houseInfoDictProcessed["floor"] = 0
-        elif "st" in self.houseInfoDict["floor"]:
-            self.houseInfoDictProcessed["floor"] = 1
-        elif "nd" in self.houseInfoDict["floor"]:
-            self.houseInfoDictProcessed["floor"] = 2
-        elif "rd" in self.houseInfoDict["floor"]:
-            self.houseInfoDictProcessed["floor"] = 3
-        else:
-            if "15" in self.houseInfoDict["floor"]:
-                self.houseInfoDictProcessed["floor"] = 15
+        if self.houseInfoDict["floor"] != None:
+            if "Ground" in self.houseInfoDict["floor"]:
+                self.houseInfoDictProcessed["floor"] = 0
+            elif "st" in self.houseInfoDict["floor"]:
+                self.houseInfoDictProcessed["floor"] = 1
+            elif "nd" in self.houseInfoDict["floor"]:
+                self.houseInfoDictProcessed["floor"] = 2
+            elif "rd" in self.houseInfoDict["floor"]:
+                self.houseInfoDictProcessed["floor"] = 3
             else:
-                self.houseInfoDictProcessed["floor"] = self.houseInfoDict["floor"].split("th")[0]
+                if "15" in self.houseInfoDict["floor"]:
+                    self.houseInfoDictProcessed["floor"] = 15
+                else:
+                    self.houseInfoDictProcessed["floor"] = int(self.houseInfoDict["floor"].split("th")[0])
+        else:
+            self.houseInfoDictProcessed["floor"] = random.randint(2, 6)
 
     def processTypology(self):
-        self.houseInfoDictProcessed["typology"] = self.houseInfoDict["typology"].replace("Typology","")
+        if self.houseInfoDict["typology"] != None:
+            typology = self.houseInfoDict["typology"].replace("Typology", "")
+            if typology == "Flat":
+                typologyInt = 0
+            else:
+                typologyInt = 1
+        else:
+            typologyInt = 0
+
+        self.houseInfoDictProcessed["typology"] = typologyInt
 
     def processStatus(self):
-        self.houseInfoDictProcessed["status"] = self.houseInfoDict["status"].replace("Status","")
+        if self.houseInfoDict["status"] != None:
+            status = self.houseInfoDict["status"].replace("Status","")
+            if status == "good":
+                self.houseInfoDictProcessed["status"] = 1
+            elif status == "Almost new" or status == "Very good":
+                self.houseInfoDictProcessed["status"] = 2
+            else:
+                self.houseInfoDictProcessed["status"] = 0
+        else:
+            self.houseInfoDictProcessed["status"] = 1
 
     def processAntiquity(self):
-        pre = self.houseInfoDict["antiquity"].replace("Antiquity", "")
-        self.houseInfoDictProcessed["antiquity"] = mean([int(a) for a in pre.split() if a.isdigit()])
+        if self.houseInfoDict["antiquity"] != None:
+            pre = self.houseInfoDict["antiquity"].replace("Antiquity", "")
+            self.houseInfoDictProcessed["antiquity"] = int(mean([int(a) for a in pre.split() if a.isdigit()]))
+        else:
+            self.houseInfoDictProcessed["antiquity"] = fotoCasaConstants["antiquityAverage"]
 
     def processElevator(self):
-        if "Yes" in self.houseInfoDict["elevator"]:
-            #Has elevator
-            self.houseInfoDictProcessed["elevator"] = 1
+        if self.houseInfoDict["elevator"] != None:
+            if "Yes" in self.houseInfoDict["elevator"]:
+                self.houseInfoDictProcessed["elevator"] = 1
+            else:
+                self.houseInfoDictProcessed["elevator"] = 0
         else:
             self.houseInfoDictProcessed["elevator"] = 0
 
     def processOrientation(self):
-        self.houseInfoDictProcessed["orientation"] = self.houseInfoDict["orientation"].replace("Orientation", "")
+        if self.houseInfoDict["orientation"] != None:
+            self.houseInfoDictProcessed["orientation"] = self.houseInfoDict["orientation"].replace("Orientation", "")
 
     def processParking(self):
-        self.houseInfoDictProcessed["parking"] = self.houseInfoDict["parking"].replace("Parking", "")
+        if self.houseInfoDict["parking"] != None:
+            parking = self.houseInfoDict["parking"].replace("Parking", "")
+            if parking == "Community":
+                self.houseInfoDictProcessed["parking"] = 1
+            else:
+                self.houseInfoDictProcessed["parking"] = 2
+        else:
+            self.houseInfoDictProcessed["parking"] = 0
 
     def processFurnished(self):
-        self.houseInfoDictProcessed["furnished"] = self.houseInfoDict["furnished"].replace("Furnished", "")
+        if self.houseInfoDict["furnished"] != None:
+            self.houseInfoDictProcessed["furnished"] = self.houseInfoDict["furnished"].replace("Furnished", "")
 
     def processHeating(self):
-        self.houseInfoDictProcessed["heating"] = self.houseInfoDict["heating"].replace("Heating", "")
+        if self.houseInfoDict["heating"] != None:
+            self.houseInfoDictProcessed["heating"] = self.houseInfoDict["heating"].replace("Heating", "")
 
     def processHotWater(self):
-        self.houseInfoDictProcessed["hotwater"] = self.houseInfoDict["hotwater"].replace("Hot water", "")
+        if self.houseInfoDict["hotwater"] != None:
+            self.houseInfoDictProcessed["hotwater"] = self.houseInfoDict["hotwater"].replace("Hot water", "")
 
     def processTags(self):
-        #TODO: Separate tags into actual features
-        self.houseInfoDictProcessed["tags"] = self.houseInfoDict["tags"]
+        tags = self.houseInfoDict["tags"]
+        self.houseInfoDictProcessed["tags"] = tags
+
+        if tags != None:
+            if "Air Conditioning" in tags:
+                self.houseInfoDictProcessed['airconditioning'] = 1
+            else:
+                self.houseInfoDictProcessed['airconditioning'] = 0
+            if "Terrace" in tags:
+                self.houseInfoDictProcessed['terrace'] = 1
+            else:
+                self.houseInfoDictProcessed['terrace'] = 0
+            if "Fully equipped kitchen" in tags:
+                self.houseInfoDictProcessed['kitchen'] = 1
+            else:
+                self.houseInfoDictProcessed['kitchen'] = 0
+            if "Parquet flooring" in tags:
+                self.houseInfoDictProcessed['parquet'] = 1
+            else:
+                self.houseInfoDictProcessed['parquet'] = 0
+        else:
+            self.houseInfoDictProcessed['airconditioning'] = 0
+            self.houseInfoDictProcessed['terrace'] = 0
+            self.houseInfoDictProcessed['kitchen'] = 0
+            self.houseInfoDictProcessed['parquet'] = 0
 
     def processDescription(self):
         self.houseInfoDictProcessed["description"] = self.houseInfoDict["description"]
 
     def _processAll(self):
-        # It executes all the functions of the class and returns the processed dictionary
+        # It executes all the "process..." functions of the class and returns the processed dictionary
         for str in dir(self):
             func = getattr(self, str)
             if str.startswith('process') and hasattr(func, '__call__'):

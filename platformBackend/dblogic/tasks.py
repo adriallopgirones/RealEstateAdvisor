@@ -16,7 +16,11 @@ def dbUpdateTask():
     This function will be executed periodically using Celery and Redis. The schedules can be changed
     from the admin panel.
     """
-    do = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor)
+    do = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, "fotocasa_xgb_reg.pkl")
     do.dbUpdate("barcelona")
+
+
+
+
 
 

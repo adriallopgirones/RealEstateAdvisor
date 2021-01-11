@@ -7,13 +7,14 @@ application = get_wsgi_application()
 from dblogic.models import FotocasaHouse
 from scrappersLogic.FotocasaScrapper import FotocasaScrapper
 from dataProcessement.FotocasaDataProcessor import FotocasaDataProcessor
+from dblogic.mlOperator import mlOperator
 from django.db.models import F
 
 import queue
 from threading import Thread
 import sys
-import csv
 from datetime import date
+import pandas as pd
 
 class dbOperator():
 
@@ -21,10 +22,11 @@ class dbOperator():
     This class receives instances of the desired model, scrapper and processor and perform different
     db-related operations
     """
-    def __init__(self, model, scrapper, processor):
+    def __init__(self, model, scrapper, processor, mlOperator):
         self.model = model
         self.scrapper = scrapper
         self.processor = processor
+        self.mlOperator = mlOperator
 
     def dictToDB(self, processedDict):
         """
@@ -59,15 +61,18 @@ class dbOperator():
 
         while sc.stopFetchingTrigger(prevNextUrls["prev"], prevNextUrls["next"]) and nPage < lastPage:
 
-            # When we cannot retrieve the urls we assign the variable to None
-            if houseUrls == None:
-                print(f"Skipping page {nPage}")
-                continue
-
             sys.stdout.write(f"\rScrapping houseUrls and onlineTimes in page: {nPage}/{lastPage}")
 
             prevNextUrls["prev"] = houseUrls
             houseUrls, onlineTimes = sc.getHousesListUrlsAndTimes(nPage)
+
+            # When we cannot retrieve the urls we assign the variable to None
+            if houseUrls == None:
+                print(f"Skipping page {nPage}")
+                prevNextUrls = {"prev": ["a"], "next": ["b"]}
+                nPage += 1
+                continue
+
             prevNextUrls["next"] = houseUrls
 
             houseUrlsList += houseUrls
@@ -95,14 +100,14 @@ class dbOperator():
                 sys.stdout.write(f"\r{dynamicprint} {totalHouses - enclosure_queue.qsize()}/{totalHouses}")
 
                 urlTimeTuple = q.get_nowait()
-                try:
-                    dataDict = sc.getHouseInfo(urlTimeTuple[0])
-                    if dataDict != None:
-                        pr = self.processor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
-                        # Storing the fetched house into the DB
-                        self.dictToDB(pr._processAll())
-                except Exception as e:
-                    print(f"Error fetching the house with url: {urlTimeTuple[0]} error: {e}")
+                # try:
+                dataDict = sc.getHouseInfo(urlTimeTuple[0])
+                if dataDict != None:
+                    pr = self.processor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
+                    # Storing the fetched house into the DB
+                    self.dictToDB(pr._processAll())
+                # except Exception as e:
+                #     print(f"Error fetching the house with url: {urlTimeTuple[0]} error: {e}")
 
                 q.task_done()
 
@@ -128,7 +133,7 @@ class dbOperator():
         enclosure_queue.join()
 
 
-    def dbUpdate(self, city):
+    def dbUpdate(self, city, mlModelName):
         # Retrieving the field "urls" for all objects of the specified model
         houseUrlsListDB = self.model.objects.all().values_list('url', flat=True)
 
@@ -159,41 +164,29 @@ class dbOperator():
         notSoldHouses = self.model.objects.filter(sold=0)
         notSoldHouses.update(timeOnline=F('timeonline') + 7)
 
+        # Predicting the price for the new houses
+        mlo = self.mlOperator(self.model, mlModelName)
+        mlo.predictedPricesFiller()
 
     def DBmodeltoCSV(self):
         """
         This functions takes a model and exports it as a csv file
         """
+        df = {}
+        fileName = f"{self.model.__name__}_{date.today()}.csv"
 
-        fileName = f"{self.model.__name__}:{date.today()}.csv"
+        for i, field in enumerate(self.model._meta.fields):
+            df[field.name]=[]
 
-        with open(f"../csvFiles/{fileName}", "w") as csvFile:
-            writer = csv.writer(csvFile)
-            # Writing first row with column names
-            row = ""
-            for field in self.model._meta.fields:
-                # Removing semicolons, since they'll be used as separators
-                row += field.name
-                row += ";"
+        for obj in self.model.objects.all():
+            # We iterate over every field of the objects
+            for i, field in enumerate(self.model._meta.fields):
+                df[field.name].append(str(getattr(obj, field.name)))
 
-            writer.writerow([row])
-
-            # write your header first
-            for obj in self.model.objects.all():
-                row = ""
-                # We iterate over every field of the objects
-                for field in self.model._meta.fields:
-                    rowContent = str(getattr(obj, field.name)).replace(";","")
-                    row += rowContent
-                    row += ";"
-
-                writer.writerow([row])
-
+        pd.DataFrame(df).to_csv(f"../csvFiles/{fileName}")
 
 if __name__ == '__main__':
+    pass
     # dbo = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor)
-    # dbo.dbUpdater("barcelona")
-    SoldHouses = FotocasaHouse.objects.filter(sold=1)
-    print(len(SoldHouses))
-    for s in SoldHouses:
-        print(s.url)
+    # urls, times = dbo.getHousesUrls("barcelona", 38)
+    # dbo.dbFiller("barcelona", urls, times)

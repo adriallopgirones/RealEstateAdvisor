@@ -79,32 +79,44 @@ class FotocasaScrapper(RealEstateScrapper):
         url = self.buildUrlForHouse(houseUrl)
         html = super().doRequestRequestsHtml(url)
         soup = super().getBeautifulSoup(html)
-        # Dictionary to return, only strings at this point
+        # Dictionary to return, only None's at this point
         houseInfoDict = {
-            "price":"",
-            "zone":"",
-            "nbedrooms":"",
-            "nbathrooms":"",
-            "size":"",
-            "floor":"",
-            "typology":"",
-            "status":"",
-            "antiquity":"",
-            "elevator":"",
-            "orientation":"",
-            "parking":"",
-            "furnished":"",
-            "heating":"",
-            "hotwater":"",
-            "tags":"",
-            "description":""
+            "price":None,
+            "zone":None,
+            "nbedrooms":None,
+            "nbathrooms":None,
+            "size":None,
+            "floor":None,
+            "typology":None,
+            "status":None,
+            "antiquity":None,
+            "elevator":None,
+            "orientation":None,
+            "parking":None,
+            "furnished":None,
+            "heating":None,
+            "hotwater":None,
+            "tags":None,
+            "description":None
 
         }
 
         # Getting all the features from the soup
         price = soup.find("span", class_="re-DetailHeader-price")
         if price is not None:
-            houseInfoDict["price"] = price.get_text()
+            if "Ask" not in price.get_text():
+                euros = (price.get_text().split(" ")[0]).replace(".", "")
+                try:
+                    intEuros = int(euros)
+                except ValueError as e:
+                    print(f"Data processement error: string to int: {e}")
+                # Getting rid of overpriced houses to avoid outliers
+                if intEuros > 1500000:
+                    return None
+                else:
+                    houseInfoDict["price"] = intEuros
+            else:
+                return None
         else:
             raise Exception("Not able to find the price")
             return None
