@@ -113,7 +113,7 @@ class dbOperator():
 
         num_fetch_threads = 30
         totalHouses = len(houseUrlsList)
-        dynamicprint = f"Scrapping Houses, house:"
+        dynamicprint = f"Scrapping houses, house:"
         sys.stdout.write(f"\r{dynamicprint} 0/{totalHouses}")
 
         # Creating an instance of whatever scrapper this function receives
