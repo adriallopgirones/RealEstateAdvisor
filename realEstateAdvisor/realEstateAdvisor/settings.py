@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'dblogic.apps.DblogicConfig',
     'django_celery_beat',
+    'webplatform.apps.WebplatformConfig',
+    'userSystem.apps.UsersystemConfig',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -129,3 +132,8 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Europe/Madrid'
 
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+LOGIN_REDIRECT_URL = 'webplatform-home'
+LOGIN_URL = 'userSystem-login'
