@@ -27,3 +27,7 @@ class FotocasaHouse(models.Model):
     kitchen = models.IntegerField(default=None)
     parquet = models.IntegerField(default=None)
 
+class CurrentBestMLModel(models.Model):
+    mae = models.FloatField(default=0)
+    modelname = models.CharField(max_length=500, default="test")
+

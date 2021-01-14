@@ -23,7 +23,7 @@
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href={%url "webplatform-home" %}>Home</a>
-              <a class="nav-item nav-link" href="#">City Overview</a>
+              <a class="nav-item nav-link" href={%url "webplatform-cityOverview"%}> City Overview</a>
             </div>
           </div>
             <!-- Navbar Right Side -->
@@ -38,18 +38,19 @@
         </div>
       </nav>
     </header>
-    <div class="col-md-8">
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    </div>
     <main role="main" class="container">
       <div class="row">
+      <div class="col-md-12">
+          {% block cityOverview %}{% endblock cityOverview %}
+      </div>
         <div class="col-md-8">
+            {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+            {% endif %}
           {% block content %}{% endblock content %}
         </div>
         <div class="col-md-4">

@@ -1,3 +1,4 @@
+# Imports to execute the code inside the Django environment
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "realEstateAdvisor.settings")
 from django.core.wsgi import get_wsgi_application
@@ -6,6 +7,9 @@ application = get_wsgi_application()
 from dblogic.models import FotocasaHouse
 import pandas as pd
 import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
+from xgboost import XGBRegressor
 
 
 class mlOperator():
@@ -48,8 +52,6 @@ class mlOperator():
             obj.predictedprice = prediction
             obj.save()
 
-
-
     def querySetToPDdataframe(self, housesQuerySet):
         """
         This functions transforms a querySet to the proper format to run a model, a pandas DataFrame
@@ -69,11 +71,29 @@ class mlOperator():
         return pd.DataFrame(dfDict)
 
 
+    def trainGetMAEandmlModel(self, model):
+        """
+        This method receives a django model, queries all its objects, us them to train a model
+        and returns the Mean Absolute Error and the model itself
+        """
 
+        queryset = model.objects.all()
+        df = self.querySetToPDdataframe(queryset)
 
+        y_var = df['price'].values
+        X_var = df[df.columns != 'price']
+        X_train, X_test, y_train, y_test = train_test_split(X_var, y_var, test_size=0.2, random_state=0)
+        mlmodel = XGBRegressor(n_estimators=500)
+        mlmodel.fit(X_train, y_train, verbose=False, early_stopping_rounds=5,
+                  eval_set=[(X_test, y_test)])
 
+        predictions = mlmodel.predict(X_test)
+
+        mae = mean_absolute_error(predictions, y_test)
+
+        return mae, mlmodel
 
 if __name__ == '__main__':
-    # obj = mlOperator(FotocasaHouse, "fotocasa_xgb_reg.pkl")
+    obj = mlOperator(FotocasaHouse, "fotocasa_xgb_reg.pkl")
     # obj.predictedPricesFiller()
-    print('hola')
+    print(obj.trainGetMAEandmlModel())

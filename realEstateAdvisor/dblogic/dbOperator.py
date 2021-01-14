@@ -16,6 +16,7 @@ from dblogic.dataProcessement.FotocasaDataProcessor import FotocasaDataProcessor
 from dblogic.scrappersLogic.FotocasaScrapper import FotocasaScrapper
 from dblogic.models import FotocasaHouse
 from dblogic.mlOperator import mlOperator
+
 class dbOperator():
 
     """
@@ -186,7 +187,9 @@ class dbOperator():
         pd.DataFrame(df).to_csv(f"../csvFiles/{fileName}")
 
 if __name__ == '__main__':
-    pass
-    dbo = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, mlOperator)
-    urls, times = dbo.getHousesUrls("barcelona", 50,52)
-    dbo.dbFiller("barcelona", urls, times)
+    print('hola')
+    query = FotocasaHouse.objects.all()
+    print(query)
+    # dbo = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, mlOperator)
+    # urls, times = dbo.getHousesUrls("barcelona", 50,52)
+    # dbo.dbFiller("barcelona", urls, times)

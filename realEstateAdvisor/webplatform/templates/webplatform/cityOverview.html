@@ -1,10 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "webplatform/base.html" %}
+{% block cityOverview %}
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="row">
+                <div class="col-md-12" align="center">
+                    <h3>Average price of a house: {{averageHousePrices}}€</h3>
+                    <div class="border-top pt-3"></div>
+                </div>
+            </div>
+        </div>
+    </article>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="row">
+                <div class="col-md-12" align="center">
+                    <h3>Average size of a house: {{averageHouseSizes}}m</h3>
+                    <div class="border-top pt-3"></div>
+                </div>
+            </div>
+        </div>
+    </article>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="row">
+                <div class="col-md-12" align="center">
+                    <h3>Average price of a m^2: {{averagePriceM}}€</h3>
+                    <div class="border-top pt-3"></div>
+                </div>
+            </div>
+        </div>
+    </article>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="row">
+                <div class="col-md-12" align="center">
+                    <h2>10 Most expensive zones of Barcelona - House average price</h2>
+                    <div class="border-top pt-3"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" align="center">
+                    <canvas id="pie-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </article>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script>
+        var config = {
+          type: 'pie',
+          data: {
+            datasets: [{
+              data: {{ zoneAverages|safe }},
+              backgroundColor: [
+                '#CD6155', '#EC7063', '#C39BD3', '#a569bd', '#5499C7', '#3498DB',
+                '#1ABC9C', '#16A085', '#27AE60', '#F1C40F', '#F39C12', '#E67E22',
+                '#D0D3D4', '#95A5A6', '#707B7C', '#2E4053', '#273746', '#641E16',
+                '#78281F', '#512E5F', '#4A235A', '#154360', '#1B4F72', '#FDFEFE',
+                '#0E6251', '#0B5345', '#145A32', '#186A3B', '#7D6608', '#7E5109',
+                '#784212', '#7B7D7D', '#626567', '#424949', '#1B2631', '#17202A'
+              ],
+              label: 'Population'
+            }],
+            labels: {{ zones|safe }}
+          },
+          options: {
+            responsive: true
+          }
+        };
+
+        window.onload = function() {
+          var ctx = document.getElementById('pie-chart').getContext('2d');
+          window.myPie = new Chart(ctx, config);
+        };
+
+    </script>
+{% endblock cityOverview %}
+
