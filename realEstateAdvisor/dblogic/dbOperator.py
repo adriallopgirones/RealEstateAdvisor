@@ -45,7 +45,7 @@ class dbOperator():
             print(f"Problem occurred storing {processedDict} into the db: {e}")
 
 
-    def getHousesUrls(self, city, firstPage=2, lastPage=600):
+    def getHousesUrls(self, city="barcelona", firstPage=2, lastPage=600):
         """
         This function returns a list of URL's of the houses between the specified firstPage and lastPage
         for the passed city using the passed scrapper, default values will get all the urls.
@@ -134,7 +134,7 @@ class dbOperator():
         enclosure_queue.join()
 
 
-    def dbUpdate(self, city, mlModelName):
+    def dbUpdate(self, city):
         # Retrieving the field "urls" for all objects of the specified model
         houseUrlsListDB = self.model.objects.all().values_list('url', flat=True)
 
@@ -163,11 +163,16 @@ class dbOperator():
 
         # Updating the timeOnline for all not sold houses (+7), because the db is updated every 7 days
         notSoldHouses = self.model.objects.filter(sold=0)
-        notSoldHouses.update(timeOnline=F('timeonline') + 7)
+        notSoldHouses.update(timeOnline=F('timeonline') + 5)
+
+        mlo = self.mlOperator(self.model)
 
         # Predicting the price for the new houses
-        mlo = self.mlOperator(self.model, mlModelName)
+        # We check if we can improve the ML Model with the new houses, if so, we change the best MLModel
+        # And update the predictedPrice
         mlo.predictedPricesFiller()
+        mlo.updateBestMLModel()
+
 
     def DBmodeltoCSV(self):
         """
@@ -188,8 +193,10 @@ class dbOperator():
 
 if __name__ == '__main__':
     print('hola')
-    query = FotocasaHouse.objects.all()
-    print(query)
-    # dbo = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, mlOperator)
-    # urls, times = dbo.getHousesUrls("barcelona", 50,52)
+    a = mlOperator(FotocasaHouse)
+
+    dbo = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, mlOperator)
+    urls, times = dbo.dbUpdate("barcelona")
+
+
     # dbo.dbFiller("barcelona", urls, times)

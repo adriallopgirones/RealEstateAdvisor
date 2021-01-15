@@ -29,5 +29,6 @@ class FotocasaHouse(models.Model):
 
 class CurrentBestMLModel(models.Model):
     mae = models.FloatField(default=0)
-    modelname = models.CharField(max_length=500, default="test")
-
+    modelPath = models.CharField(max_length=1000, default="test")
+    # To keep track of which Django model is the ML Model
+    djangoModelName = models.CharField(max_length=50, default="FotocasaHouse")
