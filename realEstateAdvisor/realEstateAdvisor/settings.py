@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +27,7 @@ SECRET_KEY = 'zc*u89_$#5etsrmh3!fgy++k=y830l%vu#e0cpgkv)3uz4zyp&'
 DEBUG = True
 
 
-ALLOWED_HOSTS = ["realEstateAdvisor-env.eba-reuvwpmh.us-west-2.elasticbeanstalk.com"]
+ALLOWED_HOSTS = ["pure-inlet-50644.herokuapp.com"]
 
 
 # Application definition
@@ -122,6 +123,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 
 # CELERY STUFF
