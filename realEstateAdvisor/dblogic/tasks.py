@@ -2,7 +2,6 @@ from celery.utils.log import get_task_logger
 from celery import Celery, shared_task
 
 from dblogic.dbOperator import dbOperator
-from dblogic.mlOperator import mlOperator
 from dblogic.models import FotocasaHouse
 from dblogic.scrappersLogic.FotocasaScrapper import FotocasaScrapper
 from dblogic.dataProcessement.FotocasaDataProcessor import FotocasaDataProcessor
@@ -18,8 +17,7 @@ def dbUpdateTask():
     from the admin panel.
     """
 
-    mlo = mlOperator(FotocasaHouse)
-    do = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, mlo)
+    do = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor)
     do.dbUpdate("barcelona")
 
 

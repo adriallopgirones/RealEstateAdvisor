@@ -23,11 +23,11 @@ class dbOperator():
     This class receives instances of the desired model, scrapper and processor and perform different
     db-related operations
     """
-    def __init__(self, model, scrapper, processor, mlOperator):
+    def __init__(self, model, scrapper, processor):
         self.model = model
         self.scrapper = scrapper
         self.processor = processor
-        self.mlOperator = mlOperator
+        self.mlOperator = mlOperator(self.model)
 
     def dictToDB(self, processedDict):
         """
@@ -45,7 +45,7 @@ class dbOperator():
             print(f"Problem occurred storing {processedDict} into the db: {e}")
 
 
-    def getHousesUrls(self, city="barcelona", firstPage=2, lastPage=600):
+    def getHousesUrls(self, city="barcelona", firstPage=2, lastPage=4):
         """
         This function returns a list of URL's of the houses between the specified firstPage and lastPage
         for the passed city using the passed scrapper, default values will get all the urls.
@@ -101,14 +101,11 @@ class dbOperator():
                 sys.stdout.write(f"\r{dynamicprint} {totalHouses - enclosure_queue.qsize()}/{totalHouses}")
 
                 urlTimeTuple = q.get_nowait()
-                # try:
                 dataDict = sc.getHouseInfo(urlTimeTuple[0])
                 if dataDict != None:
                     pr = self.processor(dataDict, urlTimeTuple[0], urlTimeTuple[1])
                     # Storing the fetched house into the DB
                     self.dictToDB(pr._processAll())
-                # except Exception as e:
-                #     print(f"Error fetching the house with url: {urlTimeTuple[0]} error: {e}")
 
                 q.task_done()
 
@@ -144,6 +141,10 @@ class dbOperator():
         newUrlsIndices = [i for i, value in enumerate(houseUrlsList) if value not in houseUrlsListDB]
         # Symmetric difference of the two lists to get the sold houses urls indices
         soldUrlsIndices = [i for i, value in enumerate(houseUrlsListDB) if value not in houseUrlsList]
+        print("newUrlsIndices")
+        print(newUrlsIndices)
+        print("soldUrlsIndices")
+        print(soldUrlsIndices)
 
         # Adding the new houses to the DB
         self.dbFiller(city, [houseUrlsList[i] for i in newUrlsIndices],
@@ -163,16 +164,16 @@ class dbOperator():
 
         # Updating the timeOnline for all not sold houses (+7), because the db is updated every 7 days
         notSoldHouses = self.model.objects.filter(sold=0)
-        notSoldHouses.update(timeOnline=F('timeonline') + 5)
+        notSoldHouses.update(timeonline=F('timeonline') + 5)
 
-        mlo = self.mlOperator(self.model)
-
+        print('updated')
         # Predicting the price for the new houses
         # We check if we can improve the ML Model with the new houses, if so, we change the best MLModel
         # And update the predictedPrice
-        mlo.predictedPricesFiller()
-        mlo.updateBestMLModel()
+        self.mlOperator.predictedPricesFiller()
+        self.mlOperator.updateBestMLModel()
 
+        print('predicted price calculated')
 
     def DBmodeltoCSV(self):
         """
@@ -192,11 +193,4 @@ class dbOperator():
         pd.DataFrame(df).to_csv(f"../csvFiles/{fileName}")
 
 if __name__ == '__main__':
-    print('hola')
-    a = mlOperator(FotocasaHouse)
-
-    dbo = dbOperator(FotocasaHouse, FotocasaScrapper, FotocasaDataProcessor, mlOperator)
-    urls, times = dbo.dbUpdate("barcelona")
-
-
-    # dbo.dbFiller("barcelona", urls, times)
+    pass

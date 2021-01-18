@@ -54,13 +54,15 @@ class FotocasaScrapper(RealEstateScrapper):
                     housesListUrls.append(link["href"])
         else:
             print(f"There is no links in this page {self.buildUrlForCityandPage(nPage)}")
+            seleniumDriver.quit()
             return None, None
 
-        # Fetching the times a house has been in the webpage
+        # Fetching the time a house has been in the webpage
         if len(soup.select("span.re-Card-timeago")) > 0:
             for time in soup.select("span.re-Card-timeago"):
                 housesListTimes.append(time.get_text())
         else:
+            seleniumDriver.quit()
             raise Exception("There is no times in this page")
 
         if len(housesListTimes) > 0 and len(housesListTimes) > 0:

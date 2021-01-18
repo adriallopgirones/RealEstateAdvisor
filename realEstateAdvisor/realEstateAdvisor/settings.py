@@ -25,11 +25,11 @@ SECRET_KEY = 'zc*u89_$#5etsrmh3!fgy++k=y830l%vu#e0cpgkv)3uz4zyp&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = ["realEstateAdvisor-env.eba-reuvwpmh.us-west-2.elasticbeanstalk.com"]
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
