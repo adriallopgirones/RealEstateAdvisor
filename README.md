@@ -25,7 +25,3 @@ The chosen model was XGBoost, since it fast and it has been proven to work well 
 
 The platform has been coded in a very modular way, to make it easy to include new Scrappers, data Processors, so it can be easily extended to new
 webpages and cities.
-
-# Screenshots
-
-![Alt text](/relative/path/to/img.jpg?raw=true "Optional Title")
