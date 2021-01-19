@@ -27,7 +27,7 @@ SECRET_KEY = 'zc*u89_$#5etsrmh3!fgy++k=y830l%vu#e0cpgkv)3uz4zyp&'
 DEBUG = True
 
 
-ALLOWED_HOSTS = ["pure-inlet-50644.herokuapp.com"]
+ALLOWED_HOSTS = ['127.0.0.1', "pure-inlet-50644.herokuapp.com"]
 
 
 # Application definition

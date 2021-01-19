@@ -9,4 +9,4 @@ class QueryForm(forms.Form):
                                label="Max price")
     priceDifference = forms.IntegerField(max_value=2000000,
                                          min_value=100,
-                                         label="Max difference of price between real and predicted")
+                                         label="Min difference of price between real and predicted")
